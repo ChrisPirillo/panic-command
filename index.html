@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- SEO Meta Tags -->
+    <title>Panic Command | Terminal Hacking Simulator</title>
+    <meta name="description" content="Engage with Panic Command, a procedural terminal hacking simulator. Experience a retro-futuristic CRT interface with real-time code generation, kernel panic simulations, and interactive security bypass sequences.">
+    <meta name="keywords" content="Panic Command, terminal simulator, hacking game, matrix code, retro terminal, kernel panic, procedural code generator">
+    <link rel="canonical" href="https://pirillo.com/arcade/panic-command.html">
+    <meta name="author" content="Chris Pirillo">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pirillo.com/arcade/panic-command.html">
+    <meta property="og:title" content="Panic Command | Terminal Hacking Simulator">
+    <meta property="og:description" content="A high-intensity procedural terminal hacking experience. Simulate system breaches, kernel overrides, and security bypasses in a retro CRT environment.">
+    <meta property="og:image" content="https://pirillo.com/arcade/images/panic-command.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@ChrisPirillo">
+    <meta name="twitter:creator" content="@ChrisPirillo">
+    <meta name="twitter:title" content="Panic Command | Terminal Hacking Simulator">
+    <meta name="twitter:description" content="Experience a procedurally generated hacker terminal. Simulate system breaches and kernel panics in real-time.">
+    <meta name="twitter:image" content="https://pirillo.com/arcade/images/panic-command.png">
+
+    <!-- Resource Hints & Performance -->
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.google-analytics.com">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Panic Command",
+      "url": "https://pirillo.com/arcade/panic-command.html",
+      "description": "An interactive procedural terminal hacking simulator featuring CRT effects and real-time code generation.",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web",
+      "author": {
+        "@type": "Person",
+        "name": "Chris Pirillo",
+        "url": "https://pirillo.com/"
+      }
+    }
+    </script>
+
+    <!-- Google Tag Manager -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1CQ4D3VQ3L"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-1CQ4D3VQ3L');
+    </script>
+
+    <style>
+        :root {
+            --term-color: #0f0;
+            --term-bg: #060606;
+            --term-glow: 0 0 10px rgba(0, 255, 0, 0.5);
+            --scanline: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--term-bg);
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            font-display: swap; 
+            color: var(--term-color);
+        }
+
+        #terminal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 20px;
+            overflow: hidden;
+            font-size: 16px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            z-index: 1;
+            text-shadow: var(--term-glow);
+            text-align: left !important; /* Strictly enforce left alignment */
+            display: block;
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* CRT Flicker */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.02; }
+            50% { opacity: 0.05; }
+            100% { opacity: 0.02; }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 18px;
+            background-color: var(--term-color);
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 3px solid var(--term-color);
+            padding: 20px 40px;
+            font-size: 48px;
+            font-weight: bold;
+            background: #000;
+            z-index: 10;
+            display: none;
+            text-align: center;
+            box-shadow: 0 0 30px var(--term-color);
+        }
+
+        .denied { color: red; border-color: red; box-shadow: 0 0 30px red; }
+        .granted { color: var(--term-color); }
+
+        #mobile-keyboard-trigger {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            z-index: 5;
+        }
+        
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <main id="main-content" aria-label="Terminal Simulator">
+        <h1 class="sr-only">Panic Command - Terminal Hacking Simulator</h1>
+        
+        <div id="terminal" aria-live="polite"><span id="code-content"></span><span class="cursor" aria-hidden="true"></span></div>
+        
+        <div id="access-granted" class="overlay granted" role="alert" aria-hidden="true">ACCESS GRANTED</div>
+        <div id="access-denied" class="overlay denied" role="alert" aria-hidden="true">ACCESS DENIED</div>
+
+        <label for="mobile-keyboard-trigger" class="sr-only">Tap to type</label>
+        <input type="text" id="mobile-keyboard-trigger" autocomplete="off" autogrow="off">
+    </main>
+
+    <script>
+        const VOCAB = {
+            types: ['void', 'int', 'char', 'unsigned long', 'size_t', 'buffer_t', 'u8', 'u16', 'u32', 'u64', 'float', 'double', 'struct k_node*', 'uintptr_t', 'AES_KEY*', 'sockaddr_in', 'thread_t', 'mutex_t', 'FILE*', 'HANDLE', 'HMODULE', 'PROCESS_INFORMATION', 'STARTUPINFO', 'LPVOID', 'XMM_REG', '__m128i'],
+            vars: ['ptr', 'buffer', 'socket', 'hash', 'idx', 'len', 'offset', 'packet', 'header', 'payload', 'key', 'iv', 'nonce', 'tmp', 'root_kit', 'backdoor', 'exploit', 'stack_frame', 'heap_chk', 'shellcode', 'daemon_pid', 'magic_bytes', 'canary', 'overflow_guard', 'ret_addr', 'rop_chain', 'gadget', 'entropy_pool', 'cipher_ctx'],
+            keywords: ['static', 'volatile', 'const', 'register', 'unsigned', 'extern', 'inline', '__attribute__((packed))', '__declspec(dllexport)', 'restrict'],
+            funcs: ['malloc', 'free', 'memcpy', 'memset', 'printf', 'klog', 'encrypt_aes_256', 'decrypt_rsa_4096', 'socket_bind', 'init_process', 'spawn_thread', 'garbage_collect', 'flush_stream', 'check_integrity', 'bypass_firewall', 'inject_shellcode', 'override_auth', 'scan_memory', 'dump_hex', 'trace_route', 'ping_subnet', 'escalate_privileges', 'kill_process', 'mount_filesystem', 'hook_api', 'patch_kernel', 'disable_aslr', 'overflow_stack', 'read_msr', 'write_cr3', 'flush_tlb', 'alloc_pages', 'mmap', 'ptrace', 'sys_fork', 'dlopen', 'dlsym'],
+            controls: ['if', 'while', 'for', 'switch'],
+            ops: ['++', '--', '+=', '-=', '*=', '<<', '>>', '^', '&', '|', '==', '!=', '<=', '>=', '->', '.', '&&', '||', '%'],
+            macros: ['#define MAX_BUFFER 8192', '#include <sys/hacker.h>', '#pragma pack(1)', '#define NULL ((void*)0)', '#ifdef DEBUG_MODE', '#endif', '#define ROOT_UID 0', '#define KERNEL_BASE 0xC0000000', '#include <openssl/evp.h>', '#define EXPLOIT_VECTOR 0x90909090', '#pragma comment(lib, "user32.lib")'],
+            comments: [
+                '// TODO: Refactor this mess', 
+                '// FIXME: Potential buffer overflow here', 
+                '// Backdoor entry point', 
+                '// Establish handshake', 
+                '// Decrypting payload...', 
+                '// Bypassing ASLR protection...', 
+                '// Injecting DLL...', 
+                '// Waiting for callback...', 
+                '// Cleaning logs...',
+                '// WARNING: Race condition possible',
+                '// STACK SMASHING DETECTED',
+                '// Brute forcing private key...',
+                '// Hooking system calls table...'
+            ],
+            asm_instructions: ['mov', 'xor', 'push', 'pop', 'lea', 'call', 'ret', 'int 3', 'nop', 'jmp', 'cmp', 'test', 'inc', 'dec']
+        };
+
+        class CodeGenerator {
+            constructor() {
+                this.indent = 0;
+                this.buffer = "";
+            }
+
+            pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+            coin() { return Math.random() > 0.5; }
+            chance(probability) { return Math.random() < probability; }
+            add(str) { this.buffer += str; }
+            addNewline() { this.buffer += "\n" + "    ".repeat(this.indent); }
+
+            genType() { 
+                return (this.chance(0.3) ? this.pick(VOCAB.keywords) + ' ' : '') + this.pick(VOCAB.types); 
+            }
+            genVar() { 
+                return this.pick(VOCAB.vars) + (this.chance(0.5) ? `_${Math.floor(Math.random() * 99)}` : ''); 
+            }
+            genFunc() { return this.pick(VOCAB.funcs); }
+            genHexValue(digits = 6) {
+                const max = Math.pow(16, digits) - 1;
+                return '0x' + Math.floor(Math.random()*max).toString(16).padStart(digits, '0').toUpperCase();
+            }
+
+            genExpression() {
+                const r = Math.random();
+                if (r < 0.25) return `${this.genVar()} ${this.pick(VOCAB.ops)} ${this.genHexValue()}`;
+                if (r < 0.45) return `${this.genVar()} ${this.pick(VOCAB.ops)} ${this.genVar()}`;
+                if (r < 0.65) return `${this.genFunc()}(${this.genVar()}, ${Math.floor(Math.random() * 1024)})`;
+                if (r < 0.75) return `(${this.genType()})${this.genVar()}`; 
+                if (r < 0.85) return `(${this.genVar()} ${this.pick(['<<', '>>', '^', '&', '|'])} ${Math.floor(Math.random() * 32)})`; 
+                return this.genHexValue();
+            }
+
+            genInlineAssembly() {
+                this.add('__asm__ volatile (');
+                this.indent++;
+                this.addNewline();
+                const lines = Math.floor(Math.random() * 4) + 2;
+                for(let i=0; i<lines; i++) {
+                    const instr = this.pick(VOCAB.asm_instructions);
+                    const op1 = this.pick(['eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'esp', 'ebp', 'rax', 'rdi']);
+                    const op2 = this.chance(0.5) ? this.pick(['eax', 'ebx', 'ecx', 'edx']) : this.genHexValue(2);
+                    this.add(`"${instr} ${op1}, ${op2};"`);
+                    if (i < lines - 1) this.addNewline();
+                }
+                this.indent--;
+                this.addNewline();
+                this.add(');');
+                this.addNewline();
+            }
+
+            genHexDump() {
+                this.add(`\n// MEMORY SEGMENT [${this.pick(['.TEXT', '.DATA', '.BSS', '.RODATA'])}] ${this.genHexValue(8)}`);
+                this.addNewline();
+                const rows = Math.floor(Math.random() * 4) + 2;
+                for(let i=0; i<rows; i++) {
+                    let row = `0x${Math.floor(Math.random()*65535).toString(16).padStart(4,'0').toUpperCase()}: `;
+                    for(let j=0; j<8; j++) {
+                        row += Math.floor(Math.random()*255).toString(16).padStart(2,'0').toUpperCase() + " ";
+                    }
+                    row += "| ";
+                    for(let j=0; j<8; j++) {
+                        row += this.chance(0.5) ? "." : String.fromCharCode(33 + Math.floor(Math.random()*90));
+                    }
+                    this.add(row);
+                    this.addNewline();
+                }
+                this.add("// END SEGMENT\n");
+                this.addNewline();
+            }
+
+            genCommentBlock() {
+                this.add('/*');
+                this.addNewline();
+                this.add(` * EXPLOIT: ${this.pick(['Buffer Overflow', 'Heap Spray', 'Race Condition', 'Use-After-Free', 'ROP Chain'])}`);
+                this.addNewline();
+                this.add(` * TARGET:  ${this.genHexValue(8)}`);
+                this.addNewline();
+                this.add(` * PAYLOAD: ${Math.floor(Math.random() * 500)} bytes`);
+                this.addNewline();
+                this.add(' */');
+                this.addNewline();
+            }
+
+            genStatement() {
+                const r = Math.random();
+                if (r < 0.03) { this.genHexDump(); return; }
+                if (r < 0.06) { this.genInlineAssembly(); return; }
+                if (r < 0.1 && this.indent === 0) { this.add(this.pick(VOCAB.macros)); this.addNewline(); return; }
+                if (r < 0.15) { this.add(this.pick(VOCAB.comments)); this.addNewline(); }
+
+                if (r < 0.35) {
+                    this.add(`${this.genType()} ${this.genVar()} = ${this.genExpression()};`);
+                } else if (r < 0.55) {
+                    this.add(`${this.genVar()} ${this.pick(VOCAB.ops)} ${this.genExpression()};`);
+                } else if (r < 0.70) {
+                    this.add(`${this.genFunc()}(${this.genVar()}, ${this.genVar()});`);
+                } else if (r < 0.85) {
+                    const cast = `*(${this.genType()}*)`;
+                    this.add(`${cast}(${this.genVar()} + ${this.genVar()}) = ${this.genHexValue()};`);
+                } else if (r < 0.92) {
+                    this.add(`${this.pick(['return', 'break', 'continue', 'goto fail'])} ${this.coin() ? '0' : '-1'};`);
+                } else {
+                    this.add(`${this.genVar()}->${this.pick(VOCAB.vars)} = ${this.genExpression()};`);
+                }
+                this.addNewline();
+            }
+
+            genControlStructure(depth = 0) {
+                if (depth > 4) { this.genStatement(); return; }
+                const type = this.pick(VOCAB.controls);
+                if (type === 'for') {
+                    this.add(`for (${this.pick(['int', 'size_t'])} i = 0; i < ${this.genHexValue(4)}; i++) {`);
+                } else if (type === 'while') {
+                    this.add(`while (${this.genVar()} ${this.pick(['!=', '<', '>'])} ${this.genHexValue()}) {`);
+                } else if (type === 'if') {
+                    const cond = this.chance(0.5) 
+                        ? `${this.genVar()} ${this.coin() ? '==' : '!='} NULL`
+                        : `(${this.genVar()} & ${this.genHexValue()})`;
+                    this.add(`if (${cond}) {`);
+                } else {
+                    this.add(`switch (${this.genVar()} & 0xFF) {`);
+                }
+                this.indent++;
+                this.addNewline();
+                const lines = Math.floor(Math.random() * 5) + 1;
+                for(let k=0; k<lines; k++) {
+                    if (type === 'switch' && this.chance(0.3)) {
+                        this.add(`case ${this.genHexValue(2)}:`);
+                        this.indent++;
+                        this.addNewline();
+                        this.genStatement();
+                        this.add('break;');
+                        this.indent--;
+                        this.addNewline();
+                    } else if (Math.random() > 0.75) {
+                        this.genControlStructure(depth + 1);
+                    } else {
+                        this.genStatement();
+                    }
+                }
+                this.indent--;
+                this.buffer = this.buffer.trimEnd(); 
+                this.addNewline();
+                this.add("}");
+                this.addNewline();
+            }
+
+            genFunctionDefinition() {
+                if (this.chance(0.05)) { this.genCommentBlock(); }
+                if (this.chance(0.08)) {
+                    this.add(`typedef struct ${this.pick(['_packet', '_context', '_key', '_node'])} {`);
+                    this.indent++;
+                    this.addNewline();
+                    for(let i=0; i<3; i++) this.add(`${this.genType()} ${this.genVar()};\n` + "    ".repeat(this.indent));
+                    this.indent--;
+                    this.buffer = this.buffer.trimEnd();
+                    this.addNewline();
+                    this.add(`} ${this.pick(VOCAB.types).replace('*', '')}_t;\n`);
+                    this.addNewline();
+                    return;
+                }
+                const prefix = this.pick(['sys_', 'net_', 'crypto_', 'kern_', 'hack_', 'exploit_', 'hook_', 'mem_']);
+                const funcName = `${prefix}${this.genFunc()}_${Math.floor(Math.random()*100)}`;
+                const args = `${this.genType()} ${this.pick(['arg', 'ctx', 'ptr', 'fd'])}${Math.floor(Math.random()*9)}`;
+                
+                this.add(`${this.genType()} ${funcName}(${args}) {`);
+                this.indent++;
+                this.addNewline();
+                const lines = Math.floor(Math.random() * 10) + 3;
+                for(let i=0; i<lines; i++) {
+                    if (Math.random() > 0.7) {
+                        this.genControlStructure();
+                    } else {
+                        this.genStatement();
+                    }
+                }
+                this.indent--;
+                this.buffer = this.buffer.trimEnd();
+                this.addNewline();
+                this.add("}\n");
+                this.addNewline();
+            }
+
+            fillBuffer(minChars = 1500) {
+                while(this.buffer.length < minChars) {
+                    this.genFunctionDefinition();
+                }
+            }
+            pop(count) {
+                if (this.buffer.length < count) this.fillBuffer();
+                const chunk = this.buffer.substring(0, count);
+                this.buffer = this.buffer.substring(count);
+                return chunk;
+            }
+        }
+
+        const generator = new CodeGenerator();
+        generator.fillBuffer(1000);
+
+        const terminal = document.getElementById('code-content');
+        const scrollContainer = document.getElementById('terminal');
+        const accessGrantedEl = document.getElementById('access-granted');
+        const accessDeniedEl = document.getElementById('access-denied');
+        
+        let charCount = 3;
+        let isAccessFlow = false;
+
+        function resetTerminal() {
+            terminal.textContent = "";
+            generator.buffer = "";
+            generator.indent = 0;
+            generator.fillBuffer(1000);
+            accessGrantedEl.style.display = 'none';
+            accessDeniedEl.style.display = 'none';
+            isAccessFlow = false;
+            terminal.textContent = generateHeader();
+        }
+
+        function typeCode() {
+            if (isAccessFlow) return;
+            const chunk = generator.pop(charCount);
+            terminal.textContent += chunk;
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if(e.key === "Backspace") return;
+            if (e.key === "Escape") { resetTerminal(); return; }
+            if (e.key === "Alt") {
+                e.preventDefault();
+                isAccessFlow = true;
+                accessGrantedEl.style.display = 'block';
+                return;
+            }
+            if (e.getModifierState("CapsLock")) {
+                isAccessFlow = true;
+                accessDeniedEl.style.display = 'block';
+                return;
+            } else {
+                accessDeniedEl.style.display = 'none';
+                if (!accessGrantedEl.style.display || accessGrantedEl.style.display === 'none') {
+                    isAccessFlow = false;
+                }
+            }
+            if (e.key === "Shift" || e.key === "Control" || e.key === "Meta") return;
+            if (accessGrantedEl.style.display === 'block' && e.key !== 'Alt') {
+                accessGrantedEl.style.display = 'none';
+                isAccessFlow = false;
+            }
+            typeCode();
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            if(e.target.tagName !== 'INPUT') {
+                typeCode();
+                document.getElementById('mobile-keyboard-trigger').focus();
+            }
+        });
+        
+        document.addEventListener('click', () => {
+             document.getElementById('mobile-keyboard-trigger').focus();
+        });
+
+        function generateHeader() {
+            const systems = ['KERNEL', 'BIOS', 'MAINFRAME', 'NEURAL_NET', 'PROXY_CHAIN', 'SATELLITE_UPLINK', 'GIBSON', 'DATA_FORTRESS', 'SKYNET_NODE', 'BLACK_ICE'];
+            const errors = ['PANIC', 'FAILURE', 'CORRUPTION', 'BREACH', 'OVERLOAD', 'INJECTION', 'LOCKDOWN', 'EXCEPTION', 'SEGFAULT'];
+            const warnings = ['UNAUTHORIZED ACCESS DETECTED', 'SECURITY PROTOCOL ENGAGED', 'SYSTEM INTEGRITY COMPROMISED', 'EXTERNAL CONNECTION ESTABLISHED', 'FIREWALL PENETRATION DETECTED', 'TRACE PROGRAM STARTED'];
+            const actions = ['INITIALIZING COUNTER-MEASURES', 'DUMPING CORE MEMORY', 'TRACING IP ADDRESS', 'ENCRYPTING FILESYSTEM', 'ESTABLISHING SECURE CONNECTION', 'RE-ROUTING POWER', 'DEPLOYING ICE', 'PURGING LOGS'];
+            const sys = systems[Math.floor(Math.random() * systems.length)];
+            const err = errors[Math.floor(Math.random() * errors.length)];
+            const warn = warnings[Math.floor(Math.random() * warnings.length)];
+            const act = actions[Math.floor(Math.random() * actions.length)];
+            const ver = `v${Math.floor(Math.random() * 9)}.${Math.floor(Math.random() * 9)}.${Math.floor(Math.random() * 99)}`;
+            
+            // Header ends in exactly one newline
+            return `/*\n * ${sys}_${err} ${ver}\n * ${warn}\n * ${act}...\n */\n`;
+        }
+
+        window.addEventListener('load', () => {
+            terminal.textContent = generateHeader();
+        });
+    </script>
+</body>
+</html>
